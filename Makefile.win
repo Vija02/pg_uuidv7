@@ -1,18 +1,24 @@
 # Windows-specific Makefile
 EXTENSION = pg_uuidv7
 MODULE_big = $(EXTENSION)
-OBJS = src/pg_uuidv7.o
+MODULES = $(EXTENSION)
+
+# Source files (in root directory)
+SRCS = pg_uuidv7.c
+OBJS = $(SRCS:.c=.o)
+
+# Version
 EXTENSION_VERSION = 1.6
 
-# Paths - adjust these according to your PostgreSQL version
-PG_VERSION = 14
+# PostgreSQL paths
+PG_VERSION = 17
 POSTGRESQL_PATH = C:/Program Files/PostgreSQL/$(PG_VERSION)
 PG_INCLUDE = $(POSTGRESQL_PATH)/include
 PG_LIB = $(POSTGRESQL_PATH)/lib
 
 # Compiler settings
 CC = gcc
-CFLAGS = -I$(PG_INCLUDE) -I$(PG_INCLUDE)/server -O2
+CFLAGS = -I$(PG_INCLUDE) -I$(PG_INCLUDE)/server -I$(PG_INCLUDE)/server/port/win32 -O2
 LDFLAGS = -L$(PG_LIB) -lpq
 
 # Extension files

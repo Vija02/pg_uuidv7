@@ -36,18 +36,24 @@ jobs:
           mingw-w64-x86_64-postgresql
           make
 
+    - name: List Directory Structure
+      shell: bash
+      run: |
+        ls -R
+
     - name: Build Extension
       shell: msys2 {0}
       run: |
+        # Create build directory
         mkdir -p build
+        # Copy necessary files to build directory
+        cp pg_uuidv7.c build/
+        cp -r sql build/
+        cp *.control build/
+        cp Makefile.win build/
+        # Build
         cd build
-        make -f ../Makefile.win
-
-    - name: Run Tests
-      shell: msys2 {0}
-      run: |
-        cd build
-        # Add your test commands here
+        make -f Makefile.win
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
@@ -55,8 +61,8 @@ jobs:
         name: pg_uuidv7-win-pg${{ matrix.pg-version }}
         path: |
           build/*.dll
-          sql/*.sql
-          *.control
+          build/sql/*.sql
+          build/*.control
         compression-level: 9
         retention-days: 5
 
