@@ -22,9 +22,11 @@ jobs:
       uses: microsoft/setup-msbuild@v1.3.1
 
     - name: Install PostgreSQL
+      shell: pwsh
       run: |
         choco install postgresql16 --params '/Password:postgres'
-        refreshenv
+        Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
+        Update-SessionEnvironment
 
     - name: Build
       working-directory: ${{github.workspace}}/msvc/pg_uuidv7
