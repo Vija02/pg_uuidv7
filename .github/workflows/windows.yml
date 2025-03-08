@@ -3,6 +3,8 @@ name: Build PostgreSQL Extension
 on:
   push:
     branches: [ main ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ main ]
 
@@ -15,7 +17,7 @@ jobs:
         pg-version: [17]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Setup PostgreSQL
       run: |
@@ -48,28 +50,33 @@ jobs:
         # Add your test commands here
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: pg_uuidv7-win-pg${{ matrix.pg-version }}
         path: |
           build/*.dll
           sql/*.sql
           *.control
+        compression-level: 9
+        retention-days: 5
 
   create-release:
     needs: build-windows
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/tags/')
     
     steps:
     - name: Download all artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+        merge-multiple: true
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
       with:
         files: |
-          pg_uuidv7-win-pg*/*
+          artifacts/**/*
+        generate_release_notes: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
