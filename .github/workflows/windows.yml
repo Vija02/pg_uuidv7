@@ -1,0 +1,75 @@
+name: Build PostgreSQL Extension
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    strategy:
+      matrix:
+        pg-version: [17]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup PostgreSQL
+      run: |
+        choco install postgresql${{ matrix.pg-version }} --params '/Password:postgres'
+        echo "C:\Program Files\PostgreSQL\${{ matrix.pg-version }}\bin" >> $GITHUB_PATH
+        echo "C:\Program Files\PostgreSQL\${{ matrix.pg-version }}\lib" >> $GITHUB_PATH
+      shell: bash
+
+    - name: Setup MSYS2
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        update: true
+        install: >-
+          mingw-w64-x86_64-gcc
+          mingw-w64-x86_64-postgresql
+          make
+
+    - name: Build Extension
+      shell: msys2 {0}
+      run: |
+        mkdir -p build
+        cd build
+        make -f ../Makefile.win
+
+    - name: Run Tests
+      shell: msys2 {0}
+      run: |
+        cd build
+        # Add your test commands here
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: pg_uuidv7-win-pg${{ matrix.pg-version }}
+        path: |
+          build/*.dll
+          sql/*.sql
+          *.control
+
+  create-release:
+    needs: build-windows
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: |
+          pg_uuidv7-win-pg*/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
