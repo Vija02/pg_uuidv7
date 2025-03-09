@@ -12,7 +12,7 @@ jobs:
     
     strategy:
       matrix:
-        configuration: [Debug, Release]
+        configuration: [Release]
         platform: [x64]
 
     steps:
@@ -24,7 +24,7 @@ jobs:
     - name: Install PostgreSQL
       shell: pwsh
       run: |
-        choco install postgresql16 --params '/Password:postgres'
+        choco install postgresql17 --params '/Password:postgres'
         Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
         Update-SessionEnvironment
 
