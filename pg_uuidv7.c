@@ -7,7 +7,7 @@
 
 #include <time.h>
 
-*
+/*
  * Monkey-patch the clock_gettime function for windows
  * 
  * Thanks to https://stackoverflow.com/questions/5404277/porting-clock-gettime-to-windows
