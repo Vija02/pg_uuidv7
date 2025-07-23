@@ -11,34 +11,23 @@ on:
 jobs:
   build-arm-mac:
     name: PostgreSQL 17 ARM Mac
-    runs-on: macos-14  # ARM-based macOS runner
+    runs-on: macos-latest  # Latest ARM-based macOS runner
     
     steps:
-      # Install PostgreSQL 17
-      - name: Install PostgreSQL 17
-        run: |
-          brew install postgresql@17
-          
       # Clone repository
       - uses: actions/checkout@v4
       
-      # Find pg_config and build extension
+      # Set up PostgreSQL 17 (macOS)
+      - name: Set up PostgreSQL (macOS)
+        run: |
+          brew install postgresql@17
+          echo "$(brew --prefix postgresql@17)/bin" >> $GITHUB_PATH
+      
+      # Build extension
       - name: Build extension
         run: |
-          # Find the correct pg_config path
-          PG_CONFIG_PATH=$(brew --prefix postgresql@17)/bin/pg_config
-          echo "Using pg_config at: $PG_CONFIG_PATH"
-          
-          # Verify pg_config exists
-          if [ ! -f "$PG_CONFIG_PATH" ]; then
-            echo "Error: pg_config not found at $PG_CONFIG_PATH"
-            echo "Available PostgreSQL installations:"
-            brew list | grep postgresql
-            exit 1
-          fi
-          
-          make clean
-          make PG_CONFIG="$PG_CONFIG_PATH"
+          export PG_CONFIG="$(brew --prefix postgresql@17)/bin/pg_config"
+          make
           
       # Upload only the dylib file
       - name: Upload Artifacts
