@@ -1,0 +1,39 @@
+name: Build ARM Mac PostgreSQL Extension
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-arm-mac:
+    name: PostgreSQL 17 ARM Mac
+    runs-on: macos-14  # ARM-based macOS runner
+    
+    steps:
+      # Install PostgreSQL 17
+      - name: Install PostgreSQL 17
+        run: |
+          brew install postgresql@17
+          
+      # Clone repository
+      - uses: actions/checkout@v4
+      
+      # Build extension
+      - name: Build extension
+        run: |
+          make clean
+          make PG_CONFIG=/opt/homebrew/opt/postgresql@17/bin/pg_config
+          
+      # Upload only the dylib file
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pg_uuidv7-arm-mac-pg17
+          path: |
+            *.dylib
+          compression-level: 9
+          retention-days: 5
