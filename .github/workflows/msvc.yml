@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         configuration: [Release]
-        platform: [x64]
+        platform: [x64, x32]
 
     steps:
     - uses: actions/checkout@v4
@@ -38,5 +38,5 @@ jobs:
       with:
         name: pg_uuidv7-${{matrix.configuration}}-${{matrix.platform}}
         path: |
-          msvc/pg_uuidv7/x64/${{matrix.configuration}}/pg_uuidv7.dll
-          msvc/pg_uuidv7/x64/${{matrix.configuration}}/pg_uuidv7.pdb
+          msvc/pg_uuidv7/${{ matrix.platform == 'x64' && 'x64' || 'Win32' }}/${{matrix.configuration}}/pg_uuidv7.dll
+          msvc/pg_uuidv7/${{ matrix.platform == 'x64' && 'x64' || 'Win32' }}/${{matrix.configuration}}/pg_uuidv7.pdb
