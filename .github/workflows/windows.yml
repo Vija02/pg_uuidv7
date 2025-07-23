@@ -1,4 +1,4 @@
-name: Build PostgreSQL Extension
+name: Build Windows PostgreSQL Extension
 
 on:
   push:
@@ -15,26 +15,30 @@ jobs:
     strategy:
       matrix:
         pg-version: [17]
+        arch: [x64, x32]
 
     steps:
     - uses: actions/checkout@v4
 
     - name: Setup PostgreSQL
       run: |
-        choco install postgresql${{ matrix.pg-version }} --params '/Password:postgres'
-        echo "C:\Program Files\PostgreSQL\${{ matrix.pg-version }}\bin" >> $GITHUB_PATH
-        echo "C:\Program Files\PostgreSQL\${{ matrix.pg-version }}\lib" >> $GITHUB_PATH
+        if [ "${{ matrix.arch }}" = "x32" ]; then
+          choco install postgresql${{ matrix.pg-version }} --forcex86 --params '/Password:postgres'
+          echo "C:\Program Files (x86)\PostgreSQL\${{ matrix.pg-version }}\bin" >> $GITHUB_PATH
+          echo "C:\Program Files (x86)\PostgreSQL\${{ matrix.pg-version }}\lib" >> $GITHUB_PATH
+        else
+          choco install postgresql${{ matrix.pg-version }} --params '/Password:postgres'
+          echo "C:\Program Files\PostgreSQL\${{ matrix.pg-version }}\bin" >> $GITHUB_PATH
+          echo "C:\Program Files\PostgreSQL\${{ matrix.pg-version }}\lib" >> $GITHUB_PATH
+        fi
       shell: bash
 
     - name: Setup MSYS2
       uses: msys2/setup-msys2@v2
       with:
-        msystem: MINGW64
+        msystem: ${{ matrix.arch == 'x32' && 'MINGW32' || 'MINGW64' }}
         update: true
-        install: >-
-          mingw-w64-x86_64-gcc
-          mingw-w64-x86_64-postgresql
-          make
+        install: ${{ matrix.arch == 'x32' && 'mingw-w64-i686-gcc mingw-w64-i686-postgresql make' || 'mingw-w64-x86_64-gcc mingw-w64-x86_64-postgresql make' }}
 
     - name: List Directory Structure
       shell: bash
@@ -58,7 +62,7 @@ jobs:
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: pg_uuidv7-win-pg${{ matrix.pg-version }}
+        name: pg_uuidv7-win-${{ matrix.arch }}-pg${{ matrix.pg-version }}
         path: |
           build/*.dll
           build/sql/*.sql
