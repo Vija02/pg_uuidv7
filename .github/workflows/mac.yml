@@ -1,4 +1,4 @@
-name: Build ARM Mac PostgreSQL Extension
+name: Build Mac PostgreSQL Extension
 
 on:
   push:
@@ -9,9 +9,17 @@ on:
     branches: [ main ]
 
 jobs:
-  build-arm-mac:
-    name: PostgreSQL 17 ARM Mac
-    runs-on: macos-latest  # Latest ARM-based macOS runner
+  build-mac:
+    name: PostgreSQL 17 Mac
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            artifact_name: pg_uuidv7-arm-mac-pg17
+          - os: macos-13
+            artifact_name: pg_uuidv7-intel-mac-pg17
+    
+    runs-on: ${{ matrix.os }}
     
     steps:
       # Clone repository
@@ -33,7 +41,7 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: pg_uuidv7-arm-mac-pg17
+          name: ${{ matrix.artifact_name }}
           path: |
             *.dylib
           compression-level: 9
