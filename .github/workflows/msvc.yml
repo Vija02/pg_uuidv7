@@ -1,0 +1,42 @@
+name: Build MSVC
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    strategy:
+      matrix:
+        configuration: [Release]
+        platform: [x64]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v1.3.1
+
+    - name: Install PostgreSQL
+      shell: pwsh
+      run: |
+        choco install postgresql17 --params '/Password:postgres'
+        Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
+        Update-SessionEnvironment
+
+    - name: Build
+      working-directory: ${{github.workspace}}/msvc/pg_uuidv7
+      run: |
+        msbuild /m /p:Configuration=${{matrix.configuration}} /p:Platform=${{matrix.platform}} pg_uuidv7.vcxproj
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: pg_uuidv7-${{matrix.configuration}}-${{matrix.platform}}
+        path: |
+          msvc/pg_uuidv7/x64/${{matrix.configuration}}/pg_uuidv7.dll
+          msvc/pg_uuidv7/x64/${{matrix.configuration}}/pg_uuidv7.pdb
